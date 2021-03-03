@@ -1,0 +1,3 @@
+/Users/deniskolockin/CLionProjects/SLAU_MPI_2version/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/deniskolockin/CLionProjects/SLAU_MPI_2version/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/deniskolockin/CLionProjects/SLAU_MPI_2version/cmake-build-debug/CMakeFiles/SLAU_MPI_2version.dir
