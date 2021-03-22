@@ -18,9 +18,11 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
     printf("I'm %d from %d processes\n", process_rank, process_count);
     int number_of_elements = N / process_count;
-    double* A = (double*)malloc(sizeof(double) * N * N);
-    double* b = (double*)malloc(sizeof(double) * N);
-    double* x = (double*)malloc(sizeof(double) * N);
+    if (process_rank == 0) {
+         double* A = (double*)malloc(sizeof(double) * N * N);
+         double* b = (double*)malloc(sizeof(double) * N);
+         double* x = (double*)malloc(sizeof(double) * N);
+    }
     double* result = (double*)malloc(sizeof(double) * N);
     double* buffer = (double*)malloc(sizeof(double) * number_of_elements);
     double* part = (double*)malloc(sizeof(double) * N * number_of_elements);
@@ -75,7 +77,13 @@ int main(int argc, char **argv) {
         }
         end_time = MPI_Wtime();
         printf("time taken - %f sec\n", end_time - start_time);
+        free(A);
+        free(b);
+        free(x);
     }
+    free(buffer);
+    free(part);
+    free(result);
     MPI_Finalize();
     return 0;
 }
