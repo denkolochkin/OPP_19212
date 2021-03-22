@@ -99,6 +99,7 @@ int main(int argc, char **argv) {
     free(part_A);
     free(part_b);
     free(part_x);
+    free(buffer);
     MPI_Finalize();
     return 0;
 }
