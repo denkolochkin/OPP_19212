@@ -92,7 +92,13 @@ int main(int argc, char **argv) {
         }
         end_time = MPI_Wtime();
         printf("time taken - %f sec\n", end_time - start_time);
+        free(A);
+        free(b);
+        free(x);
     }
+    free(part_A);
+    free(part_b);
+    free(part_x);
     MPI_Finalize();
     return 0;
 }
