@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <mpi.h>
+#include "math.h"
+#include "mpi.h"
 
-double t = 1e-5;
-double eps = 1e-14;
+double t = 1e-7;
+double eps = 1e-10;
 
 int main(int argc, char **argv) {
-    int N = 4096;
+    int N = 100;
     int flag = 1;
     double start_time;
     double end_time;
@@ -33,13 +33,14 @@ int main(int argc, char **argv) {
                     A[i * N + j] = 2;
                 }
             }
-            b[i] = 8191;
+            b[i] = 199;
+            x[i] = 0;
         }
     }
-    double* buffer = (double*)malloc(sizeof(double) * number_of_elements);
     double* part_A = (double*)malloc(sizeof(double) * N * number_of_elements);
     double* part_b = (double*)malloc(sizeof(double) * number_of_elements);
     double* part_x = (double*)malloc(sizeof(double) * number_of_elements);
+    double* part_sum = (double*)malloc(sizeof(double) * number_of_elements);
     start_time = MPI_Wtime();
     MPI_Scatter(A,N * number_of_elements, MPI_DOUBLE, part_A,
                 N * number_of_elements, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -50,23 +51,22 @@ int main(int argc, char **argv) {
     while (flag) {
         double norm = 0;
         double norm_b = 0;
-        int k = 0;
-        for (int i = 0; i < number_of_elements; i++) {
-            double sum = 0;
-            for (int j = 0; j < N; j++) {
-                sum += part_A[i * N + j] * part_x[k];
-                k++;
-                if (k == number_of_elements) {
-                    MPI_Sendrecv_replace(part_x, number_of_elements, MPI_DOUBLE, (process_rank + 1) % process_count,
-                                 123,(process_rank + process_count - 1) % process_count,
-                                 123, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                    k = 0;
-                }
+        for (int i = 0; i < number_of_elements; ++i) {
+            for (int j = 0; j < number_of_elements; ++j) {
+                part_sum[i] += part_A[i * N + j] * part_x[i];
             }
-            buffer[i] = sum - part_b[i];
+        }
+        MPI_Sendrecv_replace(part_x, number_of_elements, MPI_DOUBLE, (process_rank + 1) % process_count,
+                             123,(process_rank + process_count - 1) % process_count,
+                             123, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for (int i = 0; i < number_of_elements; ++i) {
+            for (int j = number_of_elements; j < N; ++j) {
+                part_sum[i] += part_A[i * N + j] * part_x[i];
+            }
         }
         for (int i = 0; i < number_of_elements; ++i) {
-            norm += buffer[i] * buffer[i];
+            part_sum[i] -= part_b[i];
+            norm += part_sum[i] * part_sum[i];
         }
         double recv_norm;
         MPI_Allreduce(&norm, &recv_norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
             flag = 0;
         }
         for (int i = 0; i < number_of_elements; i++) {
-            part_x[i] = part_x[i] - t * buffer[i];
+            part_x[i] -= t * part_sum[i];
         }
     }
     MPI_Gather(part_x, number_of_elements, MPI_DOUBLE, x,
@@ -92,14 +92,7 @@ int main(int argc, char **argv) {
         }
         end_time = MPI_Wtime();
         printf("time taken - %f sec\n", end_time - start_time);
-        free(A);
-        free(b);
-        free(x);
     }
-    free(part_A);
-    free(part_b);
-    free(part_x);
-    free(buffer);
     MPI_Finalize();
     return 0;
 }
