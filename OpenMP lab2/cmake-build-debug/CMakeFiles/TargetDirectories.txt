@@ -1,0 +1,3 @@
+/Users/deniskolockin/CLionProjects/lab2_2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/deniskolockin/CLionProjects/lab2_2/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/deniskolockin/CLionProjects/lab2_2/cmake-build-debug/CMakeFiles/lab2_2.dir
